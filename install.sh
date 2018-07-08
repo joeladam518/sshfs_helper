@@ -1,5 +1,11 @@
 #!/usr/bin/env bash
 
+## First, check if the user is running this script as root. 
+if [ $(id -u) -ne 0 ]; then 
+    echo "This install script needs root privileges to do it's job." 1>&2
+    exit 1
+fi
+
 ## Variables
 CWD=$(pwd)
 ULBIN="/usr/local/bin" # user's local bin
@@ -37,20 +43,17 @@ msg_c() { # Output messages in color! :-)
 
 ## Start Script
 
-# Check if running as root?
-# $EUID & $UID == user_id
-# root user_id == 0
-if [ "$EUID" -ne 0 ]; then 
-    msg_c -r "Please run ${0} as root."
-    exit
-fi
+# TODO: Check to see if sshfs is installed. If it isn't, output error message and die.
 
 # Set the proper permissions
 msg_c -g "Setting the proper permissions."
 cd "${CWD}/bin" && chmod 0744 ${mmnt_script_name} ${umnt_script_name}
 cd "${CWD}"
 
-# link these scripts to the .local/bin directory 
+# TODO: Ask to Edit the fuse config (at: /etc/fuse.conf) to allow non root users to use 
+#       the "allow_other" option.
+
+# Symlink these scripts 
 msg_c -g "Symlinking the scripts."
 cd "${ULBIN}" && ln -sf "${CWD}/bin/${mmnt_script_name}" "${mmnt_script_name%.*}"
 cd "${ULBIN}" && ln -sf "${CWD}/bin/${umnt_script_name}" "${umnt_script_name%.*}"

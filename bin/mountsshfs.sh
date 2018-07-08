@@ -1,5 +1,11 @@
 #!/usr/bin/env bash
 
+## First, check if the user is running this script as root. 
+if [ $(id -u) -eq 0 ]; then 
+    echo "You should never run \"${0##*/}\" as root. Please try again." 1>&2
+    exit 1
+fi
+
 ## Get the Valid Server name to use for this script
 valid_servers=($(grep -w -i "Host" ~/.ssh/config | sed 's/Host//' | tr '\n' ' ' | sed 's/\* //' ))
 

@@ -1,5 +1,11 @@
 #!/usr/bin/env bash
 
+## First, check if the user is running this script as root. 
+if [ $(id -u) -ne 0 ]; then 
+    echo "This install script needs root privileges to do it's job." 1>&2
+    exit 1
+fi
+
 ## Variables
 CWD=$(pwd)
 ULBIN="/usr/local/bin" # user's local bin
@@ -35,18 +41,12 @@ msg_c() { # Output messages in color! :-)
     fi
 }
 
-
 ## Start Script
 
-# Check if running as root?
-# $EUID & $UID == user_id
-# root user_id == 0
-if [ "$EUID" -ne 0 ]; then 
-    msg_c -r "Please run ${0} as root."
-    exit
-fi
+# TODO: Check and see if the mount/unmount are where they are supposed to be. 
+#       If they are not, output error message and die.
 
-# unlink these scripts 
+# Unlink these scripts 
 msg_info "un symlinking the scripts."
 cd "${ULBIN}" && rm "./${mmnt_script_name%.*}"
 cd "${ULBIN}" && rm "./${umnt_script_name%.*}"
@@ -56,6 +56,9 @@ cd "${CWD}"
 msg_info "Setting the proper permissions."
 cd "${CWD}/bin" && chmod 0644 ${mmnt_script_name} ${umnt_script_name}
 cd "${CWD}"
+
+# TODO: Ask to reset the fuse config (at: /etc/fuse.conf) to stop allowing non root users 
+#       to be allowed to use the "allow_other" option.
 
 # Reload the Environment
 msg_info "Reloading the Environment."
@@ -68,6 +71,8 @@ ls -hlapv --color "${ULBIN}"
 # unmountsshfs -h
 
 
-msg_info "Done installing."
+## Finish Script (clean up & exit)
+
+msg_c -g "Done uninstalling."
 cd "${CWD}"
 exit 0
