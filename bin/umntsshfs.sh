@@ -114,7 +114,8 @@ fi
 
 previous_num_of_mounted_dirs=$(mount | grep $parentdirpath | wc -l)
 
-fusermount -u $localdirpath
+#fusermount -u $localdirpath # The specific sshfs linux way
+umount $localdirpath # The general way (makes me nervous)
 
 current_num_of_mounted_dirs=$(mount | grep $parentdirpath | wc -l)
 
