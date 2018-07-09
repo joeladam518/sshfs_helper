@@ -134,7 +134,7 @@ fi
 ## Make the sshfs command
 sshfs_command="sshfs ${server_user}@${serveruri}:${remotedirpath} ${localdirpath}"
 
-sshfs_command="${sshfs_command} -p 22 -C -o defer_permissions,reconnect,ServerAliveInterval=15"
+sshfs_command="${sshfs_command} -p 22 -C -o allow_other,reconnect,ServerAliveInterval=15"
 
 # Do you have an identity file path?
 if [[ ! -z $identityfilepath ]]; then
