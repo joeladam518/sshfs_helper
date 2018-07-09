@@ -10,5 +10,5 @@ _ssh_helpers_completions()
     return 0
 }
 
-complete -F _ssh_helpers_completions mountsshfs
-complete -F _ssh_helpers_completions unmountsshfs
+complete -F _ssh_helpers_completions mntsshfs.sh
+complete -F _ssh_helpers_completions umntsshfs.sh
