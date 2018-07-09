@@ -43,6 +43,17 @@ msg_c() { # Output messages in color! :-)
 
 ## Start Script
 
+# Do you have a ~/mnt directory? if not, lets make one.
+if [ -d "${HOME}/mnt" ]; then
+    msg_c -g "Good, good, good you have a \"${HOME}/mnt/\" directory.😊"
+    msg_c -g "FYI, this is where I will put all of your sshfs mounts."
+else
+    msg_c -y "Oh no! You don't have a \"${HOME}/mnt/\" directory!😮"
+    msg_c -y "I will create one for you. This is where I will put all of your sshfs mounts.😊"
+    cd "${HOME}" && mkdir "${HOME}/mnt"
+    cd "${CWD}"
+fi 
+
 # TODO: Check to see if sshfs is installed. If it isn't, output error message and die.
 
 # Set the proper permissions
