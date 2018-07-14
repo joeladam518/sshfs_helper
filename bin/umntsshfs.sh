@@ -97,7 +97,7 @@ done
 shift "$((OPTIND-1))"   # Discard the options and sentinel --
 server_to_unmount=${1}
 
-if [ $verbose -gt 2 ]; then
+if [ $verbose -gt 0 ]; then
     msg_c -nb "server to unmount: "
     msg_c -a  "${server_to_unmount}"
 fi
@@ -130,6 +130,14 @@ fi
 # Lets see if we can what computer this bash script is running on.
 computer_type=$(determine_computer_type)
 
+if [ $verbose -gt 1 ]; then
+    msg_c -nb "You computer type is: "
+    msg_c -a  "${computer_type}"
+fi
+
+previous_num_of_mounted_dirs=$(mount | grep $parentdirpath | wc -l)
+
+# Display the command to be used for debugging and exit
 if [ $testing_mode == 1 ]; then
     echo ""
     msg_c -c "The sshfs unmount command: "
@@ -142,13 +150,7 @@ if [ $testing_mode == 1 ]; then
     exit 0
 fi
 
-if [ $verbose -gt 0 ]; then
-    msg_c -nb "You computer type is: "
-    msg_c -a  "${computer_type}"
-fi
-
-previous_num_of_mounted_dirs=$(mount | grep $parentdirpath | wc -l)
-
+# Unmount the sshfs file system
 if [ "$computer_type" == "Mac" ]; then
     umount $localdirpath # The general way (makes me nervous)
 else

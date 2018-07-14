@@ -183,6 +183,9 @@ if [ ! -z $identityfilepath ]; then
     sshfs_command="${sshfs_command},IdentityFile=${identityfilepath}"
 fi
 
+previous_num_of_mounted_dirs=$(mount | grep $parentdirpath | wc -l)
+
+# Display the command to be used for debugging and exit
 if [ $testing_mode == 1 ]; then
     echo ""
     msg_c -c "The sshfs mount command: "
@@ -191,8 +194,7 @@ if [ $testing_mode == 1 ]; then
     exit 0
 fi
 
-previous_num_of_mounted_dirs=$(mount | grep $parentdirpath | wc -l)
-
+# Mount the sshfs file system
 eval ${sshfs_command}
 
 current_num_of_mounted_dirs=$(mount | grep $parentdirpath | wc -l)
