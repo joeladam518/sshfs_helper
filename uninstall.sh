@@ -9,8 +9,8 @@ fi
 ## Variables
 CWD=$(pwd)
 ULBIN="/usr/local/bin" # user's local bin
-mmnt_script_name="mountsshfs.sh"
-umnt_script_name="unmountsshfs.sh"
+mmnt_script_name="mntsshfs.sh"
+umnt_script_name="umntsshfs.sh"
 
 ## Functions
 msg_c() { # Output messages in color! :-)
@@ -47,21 +47,25 @@ msg_c() { # Output messages in color! :-)
 #       If they are not, output error message and die.
 
 # Unlink these scripts 
-msg_info "un symlinking the scripts."
+msg_c -g "un-symlinking the scripts"
 cd "${ULBIN}" && rm "./${mmnt_script_name%.*}"
 cd "${ULBIN}" && rm "./${umnt_script_name%.*}"
 cd "${CWD}"
 
 # Reset the proper permissions
-msg_info "Setting the proper permissions."
+msg_c -g "Resetting the permissions"
 cd "${CWD}/bin" && chmod 0644 ${mmnt_script_name} ${umnt_script_name}
 cd "${CWD}"
 
 # TODO: Ask to reset the fuse config (at: /etc/fuse.conf) to stop allowing non root users 
 #       to be allowed to use the "allow_other" option.
 
+# Remove the sshfs helper auto completion script from the "/etc/bash_completion.d" directory
+msg_c -g "Remove the sshfs_helpers auto complete script from the /etc/bash_completion.d directory"
+cd "${CWD}" && rm /etc/bash_completion.d/sshfs_helpers
+
 # Reload the Environment
-msg_info "Reloading the Environment."
+msg_c -g "Reloading the Environment"
 cd "${HOME}" && source "${HOME}/.bashrc"
 
 # Testing! Check to make sure the symlinks are not there then run the script with -h
@@ -73,6 +77,6 @@ ls -hlapv --color "${ULBIN}"
 
 ## Finish Script (clean up & exit)
 
-msg_c -g "Done uninstalling."
+msg_c -g "Done uninstalling"
 cd "${CWD}"
 exit 0

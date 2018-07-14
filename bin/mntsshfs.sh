@@ -13,6 +13,7 @@ valid_servers=($(grep -w -i "Host" ~/.ssh/config | sed 's/Host//' | tr '\n' ' ' 
 CWD=$(pwd)
 verbose=0
 testing_mode=0
+computer_type=""
 server_to_mount=""
 
 parentdirpath="${HOME}/mnt"
@@ -54,18 +55,34 @@ msg_c() { # Output messages in color! :-)
 }
 show_help() {
 cat << EOF
+
 Usage: ${0##*/} [-htv] [SERVER_NAME]...
+
 This script helps make it easier to use the sshfs program. Uses
 your ssh config file to generate the valid servers to mount.
 
     -h      Display this help and exit.
     -t      Testing mode. Will not run the sshfs command. Just echo it   
     -v      Verbose mode. Can be used multiple times for increased verbosity.
+
 EOF
 }
 show_valid_servers() {
     msg_c -d "The valid servers are:"
     echo "${valid_servers[@]}" | tr ' ' '\n'
+}
+determine_computer_type() {
+    local machine
+    local unameOut="$(uname -s)"
+
+    case "${unameOut}" in
+        Linux*)     machine="Linux"  ;;
+        Darwin*)    machine="Mac"    ;;
+        CYGWIN*)    machine="Cygwin";;
+        *)          machine="UNKNOWN:${unameOut}" ;;
+    esac
+
+    echo ${machine}
 }
 
 ## Parse the arguments and options for this script 
@@ -87,14 +104,17 @@ done
 shift "$((OPTIND-1))"   # Discard the options and sentinel --
 server_to_mount=${1}
 
-if [ $verbose -gt 2 ]; then
-    msg_c -c "server to mount: ${server_to_mount}"
+if [ $verbose -gt 0 ]; then
+    msg_c -nb "server to mount: "
+    msg_c -a  "${server_to_mount}"
 fi
 
 # Make sure we have a server to mount
 if [ -z $server_to_mount ]; then
+    echo ""
     msg_c -r "No server name provided." 1>&2
     show_valid_servers
+    echo ""
     exit 1
 fi
 
@@ -110,20 +130,28 @@ for valid_server in "${valid_servers[@]}"; do
     fi
 done
 
-if [ $verbose -gt 0 ]; then
+if [ $verbose -gt 2 ]; then
     echo ""
-    msg_c -a "parent directory path: ${parentdirpath}"
-    msg_c -a "remote directory path: ${remotedirpath}"
-    msg_c -a " local directory path: ${localdirpath}"
-    msg_c -a "      server username: ${server_user}"
-    msg_c -a "           server uri: ${serveruri}"
-    msg_c -a "   identity file path: ${identityfilepath}"
+    msg_c -nb "parent directory path: "
+    msg_c -a  "${parentdirpath}"
+    msg_c -nb "remote directory path: "
+    msg_c -a  "${remotedirpath}"
+    msg_c -nb " local directory path: "
+    msg_c -a  "${localdirpath}"
+    msg_c -nb "      server username: "
+    msg_c -a  "${server_user}"
+    msg_c -nb "           server uri: "
+    msg_c -a  "${serveruri}"
+    msg_c -nb "   identity file path: "
+    msg_c -a  "${identityfilepath}"
     echo ""
 fi
 
 if [ -z $localdirpath ]; then
+    echo ""
     msg_c -r "The server \"${server_to_mount}\" is not a server you can mount." 1>&2
     show_valid_servers
+    echo ""
     exit 1
 fi
 
@@ -131,19 +159,33 @@ if [ ! -d $localdirpath ]; then
     mkdir $localdirpath
 fi
 
+# Lets see if we can what computer this bash script is running on.
+computer_type=$(determine_computer_type)
+
+if [ $verbose -gt 1 ]; then
+    msg_c -nb "You computer type is: " 
+    msg_c -a  "${computer_type}"
+fi
+
 ## Make the sshfs command
 sshfs_command="sshfs ${server_user}@${serveruri}:${remotedirpath} ${localdirpath}"
 
-sshfs_command="${sshfs_command} -p 22 -C -o allow_other,reconnect,ServerAliveInterval=15"
+sshfs_command="${sshfs_command} -p 22 -C -o allow_other"
+
+if [ "$computer_type" == "Mac" ]; then
+    sshfs_commnd="${sshfs_command},defer_permissions,volname=${server_to_mount}"
+else
+    sshfs_commnd="${sshfs_command},reconnect,ServerAliveInterval=15"
+fi
 
 # Do you have an identity file path?
-if [[ ! -z $identityfilepath ]]; then
-    sshfs_command="$sshfs_command,IdentityFile=$identityfilepath"
+if [ ! -z $identityfilepath ]; then
+    sshfs_command="${sshfs_command},IdentityFile=${identityfilepath}"
 fi
 
 if [ $testing_mode == 1 ]; then
     echo ""
-    msg_c -m "The sshfs mount command: "
+    msg_c -c "The sshfs mount command: "
     echo "${sshfs_command}"
     echo ""
     exit 0
@@ -157,15 +199,19 @@ current_num_of_mounted_dirs=$(mount | grep $parentdirpath | wc -l)
 
 ## Finish Script (clean up & exit)
 
-if [ $verbose -gt 0 ]; then
-    msg_c -a "previous_num_of_mounted_dirs = ${previous_num_of_mounted_dirs}"
-    msg_c -a " current_num_of_mounted_dirs = ${current_num_of_mounted_dirs}"
+if [ $verbose -gt 2 ]; then
+    msg_c -nb "previous_num_of_mounted_dirs = "
+    msg_c -a  "${previous_num_of_mounted_dirs}"
+    msg_c -nb "current_num_of_mounted_dirs  = "
+    msg_c -a  "${current_num_of_mounted_dirs}"
 fi
 
 if [ $current_num_of_mounted_dirs -gt $previous_num_of_mounted_dirs ]; then
     msg_c -g "Successfully mounted server \"${server_to_mount}\""
 else
+    echo ""
     msg_c -r "Failed to mount server \"${server_to_mount}\""
+    echo ""
 fi
 
 exit 0

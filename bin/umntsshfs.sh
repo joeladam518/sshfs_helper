@@ -48,18 +48,34 @@ msg_c() { # Output messages in color! :-)
 }
 show_help() {
 cat << EOF
+
 Usage: ${0##*/} [-htv] [SERVER_NAME]...
+
 This script helps make it easier to use the sshfs program. Uses
-your ssh config file to generate the valid servers to unmount.
+your ssh config file to generate the valid servers to mount.
 
     -h      Display this help and exit.
     -t      Testing mode. Will not run the sshfs command. Just echo it   
     -v      Verbose mode. Can be used multiple times for increased verbosity.
+
 EOF
 }
 show_valid_servers() {
     msg_c -d "The valid servers are:"
     echo "${valid_servers[@]}" | tr ' ' '\n'
+}
+determine_computer_type() {
+    local machine
+    local unameOut="$(uname -s)"
+
+    case "${unameOut}" in
+        Linux*)     machine="Linux"  ;;
+        Darwin*)    machine="Mac"    ;;
+        CYGWIN*)    machine="Cygwin";;
+        *)          machine="UNKNOWN:${unameOut}" ;;
+    esac
+
+    echo ${machine}
 }
 
 ## Parse the arguments and options for this script 
@@ -82,54 +98,80 @@ shift "$((OPTIND-1))"   # Discard the options and sentinel --
 server_to_unmount=${1}
 
 if [ $verbose -gt 2 ]; then
-    msg_c -c "server to unmount: ${server_to_unmount}"
+    msg_c -nb "server to unmount: "
+    msg_c -a  "${server_to_unmount}"
 fi
 
 # Make sure we have a server to mount
 if [ -z $server_to_unmount ]; then
+    echo ""
     msg_c -r "No server name provided." 1>&2
     show_valid_servers
+    echo ""
     exit 1
 fi
 
 for valid_server in "${valid_servers[@]}"; do 
-    if [[ "$valid_server" == "$1" ]]; then 
+    if [ "$valid_server" == "$1" ]; then 
         localdirpath="${parentdirpath}/${server_to_unmount}"
     fi
 done
 
 if [ -z $localdirpath ]; then
-    msg_c -r "Not a valid site to unmount. Try of these: "
-    mount | grep $parentdirpath
+    echo ""
+    msg_c -r "Not a valid server to unmount."
+    msg_c -a "Try any of these:"
+    echo ""
+    mount | grep --color $parentdirpath
+    echo ""
     exit 1
 fi
 
+# Lets see if we can what computer this bash script is running on.
+computer_type=$(determine_computer_type)
+
 if [ $testing_mode == 1 ]; then
     echo ""
-    msg_c -m "The sshfs mount command: "
-    echo "fusermount -u $localdirpath"
+    msg_c -c "The sshfs unmount command: "
+    if [ "$computer_type" == "Mac" ]; then
+        echo "umount ${localdirpath}"
+    else
+        echo "fusermount -u ${localdirpath}"
+    fi
     echo ""
     exit 0
 fi
 
+if [ $verbose -gt 0 ]; then
+    msg_c -nb "You computer type is: "
+    msg_c -a  "${computer_type}"
+fi
+
 previous_num_of_mounted_dirs=$(mount | grep $parentdirpath | wc -l)
 
-#fusermount -u $localdirpath # The specific sshfs linux way
-umount $localdirpath # The general way (makes me nervous)
+if [ "$computer_type" == "Mac" ]; then
+    umount $localdirpath # The general way (makes me nervous)
+else
+    fusermount -u $localdirpath # The specific sshfs linux way
+fi
 
 current_num_of_mounted_dirs=$(mount | grep $parentdirpath | wc -l)
 
 ## Finish Script (clean up & exit)
 
-if [ $verbose -gt 0 ]; then
-    msg_c -a "previous_num_of_mounted_dirs = ${previous_num_of_mounted_dirs}"
-    msg_c -a " current_num_of_mounted_dirs = ${current_num_of_mounted_dirs}"
+if [ $verbose -gt 2 ]; then
+    msg_c -nb "previous_num_of_mounted_dirs = "
+    msg_c -a  "${previous_num_of_mounted_dirs}"
+    msg_c -nb "current_num_of_mounted_dirs  = "
+    msg_c -a  "${current_num_of_mounted_dirs}"
 fi
 
 if [ $current_num_of_mounted_dirs -lt $previous_num_of_mounted_dirs ]; then
     msg_c -g "Successfully unmounted server \"${server_to_unmount}\""
 else
+    echo ""
     msg_c -r "Failed to unmount server \"${server_to_unmount}\""
+    echo ""
 fi
 
 exit 0
