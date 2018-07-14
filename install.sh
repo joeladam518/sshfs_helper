@@ -8,7 +8,7 @@ fi
 
 ## Variables
 CWD=$(pwd)
-ULBIN="/usr/local/bin" # user's local bin
+ULBIN="/usr/local/bin" # user\'s local bin
 mmnt_script_name="mntsshfs.sh"
 umnt_script_name="umntsshfs.sh"
 
@@ -72,6 +72,9 @@ cd "${ULBIN}" && ln -sf "${CWD}/bin/${umnt_script_name}" "${umnt_script_name%.*}
 cd "${CWD}"
 
 # Put the sshfs helper auto completion script where it needs to go
+# TODO: The mac's bash_completion.d is located if the user installed (brew bash-completion) 
+#       with the directory located at:  $(brew --prefix) [ /usr/local ] /etc/bash_completion.d
+#       this is where you put the completion script for mac......... 
 if [ -f /etc/bash_completion.d/sshfs_helpers ]; then
     msg_c -y "Warning you have a sshfs_helpers file in /etc/bash_completion.d. Please review it."
 else
