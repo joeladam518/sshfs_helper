@@ -169,12 +169,12 @@ fi
 ## Make the sshfs command
 sshfs_command="sshfs ${server_user}@${serveruri}:${remotedirpath} ${localdirpath}"
 
-sshfs_command="${sshfs_command} -p 22 -C -o allow_other"
+sshfs_command="${sshfs_command} -p 22 -C -o allow_other,reconnect"
 
-if [ "$computer_type" == "Mac" ]; then
-    sshfs_commnd="${sshfs_command},defer_permissions,volname=${server_to_mount}"
+if [ "${computer_type}" = "Mac" ]; then
+    sshfs_command="${sshfs_command},noappledouble,defer_permissions,volname=${server_to_mount}"
 else
-    sshfs_commnd="${sshfs_command},reconnect,ServerAliveInterval=15"
+    sshfs_command="${sshfs_command},ServerAliveInterval=15"
 fi
 
 # Do you have an identity file path?
