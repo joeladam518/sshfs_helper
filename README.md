@@ -23,8 +23,8 @@ $ sudo ./uninstall.sh
 ```
 
 ## How to use
-First, you need to format your ssh config file properly.
-Here is an example of the formating needed for sshfs helper scripts to parse the config properly.
+### Format the ssh config file 
+Here is an example of the formating needed for sshfs helper scripts to parse the config file properly.
 
 [...] denotes a example config value. Replace it with your config value. 
 
@@ -46,11 +46,9 @@ Host [server_name]
 
 ```
 
+### The two commands
+(These commands should never be run with sudo)
 
-
-
-
-There are two commands (These commands should never be run with sudo)
 ```
 $ mntsshfs
 ```
@@ -58,9 +56,6 @@ and
 ```
 $ umntsshfs
 ```
-
-
-
 
 
 You can use the -t flag to print the sshfs command without executing it.
@@ -81,9 +76,6 @@ $ umntsshfs -t [server_name]
 ```
 
 
-
-
-
 You can also use the -v flag for verbose output
 ```
 $ mntsshfs -vvv [server_name]
@@ -102,4 +94,3 @@ $ mntsshfs -vvv [server_name]
 # current_num_of_mounted_dirs  =        1
 # Successfully mounted server "[server_name]"
 ```
-
