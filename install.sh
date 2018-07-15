@@ -8,7 +8,7 @@ fi
 
 ## Variables
 CWD=$(pwd)
-ULBIN="/usr/local/bin" # user's local bin
+ULBIN="/usr/local/bin" # user\'s local bin
 mmnt_script_name="mntsshfs.sh"
 umnt_script_name="umntsshfs.sh"
 
