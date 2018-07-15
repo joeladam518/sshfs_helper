@@ -169,7 +169,7 @@ fi
 ## Make the sshfs command
 sshfs_command="sshfs ${server_user}@${serveruri}:${remotedirpath} ${localdirpath}"
 
-sshfs_command="${sshfs_command} -p 22 -C -o allow_other,reconnect"
+sshfs_command="${sshfs_command} -p 22 -C -o allow_other,auto_cache,reconnect"
 
 if [ "${computer_type}" = "Mac" ]; then
     sshfs_command="${sshfs_command},noappledouble,defer_permissions,volname=${server_to_mount}"
