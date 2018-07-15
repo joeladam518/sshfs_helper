@@ -40,8 +40,27 @@ msg_c() { # Output messages in color! :-)
         echo "${1}"
     fi
 }
+determine_computer_type() {
+    local machine
+    local unameOut="$(uname -s)"
+
+    case "${unameOut}" in
+        Linux*)     machine="Linux"  ;;
+        Darwin*)    machine="Mac"    ;;
+        CYGWIN*)    machine="Cygwin";;
+        *)          machine="UNKNOWN:${unameOut}" ;;
+    esac
+
+    echo ${machine}
+}
 
 ## Start Script
+
+# Lets see if we can what computer this bash script is running on.
+computer_type=$(determine_computer_type)
+msg_c -nc "You computer type is: " 
+msg_c -a  "${computer_type}"
+
 
 # Do you have a ~/mnt directory? if not, lets make one.
 if [ -d "${HOME}/mnt" ]; then
@@ -72,11 +91,28 @@ cd "${ULBIN}" && ln -sf "${CWD}/bin/${umnt_script_name}" "${umnt_script_name%.*}
 cd "${CWD}"
 
 # Put the sshfs helper auto completion script where it needs to go
-if [ -f /etc/bash_completion.d/sshfs_helpers ]; then
-    msg_c -y "Warning you have a sshfs_helpers file in /etc/bash_completion.d. Please review it."
+if [ "${computer_type}" == "Mac" ]; then
+    if [ -d /usr/local/etc/bash_completion.d ]; then
+        if [ -f /usr/local/etc/bash_completion.d/sshfs_helpers ]; then
+            msg_c -y "Warning you have a sshfs_helpers file in /usr/local/etc/bash_completion.d please review it" 
+        else
+            msg_c -g "Copying sshfs_helpers-completion.bash to the /usr/local/etc/bash_completion.d directory"
+            cd "${CWD}/bin" && cp ./sshfs_helpers-completion.bash /usr/local/etc/bash_completion.d/sshfs_helpers
+        fi
+    else
+        msg_c -y "Couldn\'t locate the /usr/local/etc/bash_completion.d directory... huh? 😟" 
+    fi
 else
-    msg_c -g "Copying \"sshfs_helpers-completion.bash\" to the /etc/bash_completion.d directory"
-    cd "${CWD}/bin" && cp ./sshfs_helpers-completion.bash /etc/bash_completion.d/sshfs_helpers
+    if [ -d /etc/bash_completion.d ]; then
+        if [ -f /etc/bash_completion.d/sshfs_helpers ]; then
+            msg_c -y "Warning you have a sshfs_helpers file in /etc/bash_completion.d please review it" 
+        else
+            msg_c -g "Copying sshfs_helpers-completion.bash to the /etc/bash_completion.d directory"
+            cd "${CWD}/bin" && cp ./sshfs_helpers-completion.bash /etc/bash_completion.d/sshfs_helpers
+        fi
+    else
+        msg_c -y "Couldn\'t locate the /etc/bash_completion.d directory... huh? 😟" 
+    fi
 fi
 
 # Reload the Environment
@@ -84,7 +120,7 @@ msg_c -g "Reloading the Environment"
 cd "${HOME}" && source "${HOME}/.bashrc"
 
 # Testing! Check to make sure the symlinks are there then run the script with -h
-msg_c -g "ls'ing the ${ULBIN} directory."
+msg_c -g "ls'ing the ${ULBIN} directory"
 ls -hlapv --color "${ULBIN}"
 # mountsshfs -h
 # unmountsshfs -h

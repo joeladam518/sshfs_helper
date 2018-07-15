@@ -40,8 +40,26 @@ msg_c() { # Output messages in color! :-)
         echo "${1}"
     fi
 }
+determine_computer_type() {
+    local machine
+    local unameOut="$(uname -s)"
+
+    case "${unameOut}" in
+        Linux*)     machine="Linux"  ;;
+        Darwin*)    machine="Mac"    ;;
+        CYGWIN*)    machine="Cygwin";;
+        *)          machine="UNKNOWN:${unameOut}" ;;
+    esac
+
+    echo ${machine}
+}
 
 ## Start Script
+
+# Lets see if we can what computer this bash script is running on.
+computer_type=$(determine_computer_type)
+msg_c -nc "You computer type is: " 
+msg_c -a  "${computer_type}"
 
 # TODO: Check and see if the mount/unmount are where they are supposed to be. 
 #       If they are not, output error message and die.
@@ -61,8 +79,17 @@ cd "${CWD}"
 #       to be allowed to use the "allow_other" option.
 
 # Remove the sshfs helper auto completion script from the "/etc/bash_completion.d" directory
-msg_c -g "Remove the sshfs_helpers auto complete script from the /etc/bash_completion.d directory"
-cd "${CWD}" && rm /etc/bash_completion.d/sshfs_helpers
+if [ "${computer_type}" == "Mac" ]; then
+    if [ -f /usr/local/etc/bash_completion.d/sshfs_helpers ]; then
+        msg_c -g "Removing sshfs_helpers from the /usr/local/etc/bash_completion.d directory"
+        cd "${CWD}" && rm /usr/local/etc/bash_completion.d/sshfs_helpers
+    fi
+else
+    if [ -f /etc/bash_completion.d/sshfs_helpers ]; then
+        msg_c -g "Removing sshfs_helpers from the /etc/bash_completion.d directory"
+        cd "${CWD}" && rm /etc/bash_completion.d/sshfs_helpers
+    fi
+fi
 
 # Reload the Environment
 msg_c -g "Reloading the Environment"
