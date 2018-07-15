@@ -46,6 +46,10 @@ Host [server_name]
 
 ```
 
+
+
+
+
 There are two commands (These commands should never be run with sudo)
 ```
 $ mntsshfs
@@ -54,6 +58,10 @@ and
 ```
 $ umntsshfs
 ```
+
+
+
+
 
 You can use the -t flag to print the sshfs command without executing it.
 ```
@@ -71,6 +79,10 @@ $ umntsshfs -t [server_name]
 # fusermount -u [local_mount_dir]
 
 ```
+
+
+
+
 
 You can also use the -v flag for verbose output
 ```
