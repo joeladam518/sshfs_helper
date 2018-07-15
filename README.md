@@ -58,6 +58,7 @@ $ umntsshfs
 ```
 
 
+### The -t flag
 You can use the -t flag to print the sshfs command without executing it.
 ```
 $ mntsshfs -t [server_name]
@@ -76,6 +77,7 @@ $ umntsshfs -t [server_name]
 ```
 
 
+### The -v flag
 You can also use the -v flag for verbose output
 ```
 $ mntsshfs -vvv [server_name]
