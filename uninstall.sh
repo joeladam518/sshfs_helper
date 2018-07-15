@@ -8,7 +8,7 @@ fi
 
 ## Variables
 CWD=$(pwd)
-ULBIN="/usr/local/bin" # user's local bin
+ULBIN="/usr/local/bin" # users local bin
 mmnt_script_name="mntsshfs.sh"
 umnt_script_name="umntsshfs.sh"
 
@@ -45,10 +45,10 @@ determine_computer_type() {
     local unameOut="$(uname -s)"
 
     case "${unameOut}" in
-        Linux*)     machine="Linux"  ;;
-        Darwin*)    machine="Mac"    ;;
-        CYGWIN*)    machine="Cygwin";;
-        *)          machine="UNKNOWN:${unameOut}" ;;
+        Linux*)     machine="Linux"   ;;
+        Darwin*)    machine="Mac"     ;;
+        CYGWIN*)    machine="Cygwin"  ;;
+        *)          machine="UNKNOWN" ;;
     esac
 
     echo ${machine}
@@ -60,6 +60,11 @@ determine_computer_type() {
 computer_type=$(determine_computer_type)
 msg_c -nc "You computer type is: " 
 msg_c -a  "${computer_type}"
+
+if [ "${computer_type}" == "UNKNOWN" ]; then
+    msg_c -r "I couldn't figure out your computer type... Exiting... ☹️" 1>&2
+    exit 1
+fi
 
 # TODO: Check and see if the mount/unmount are where they are supposed to be. 
 #       If they are not, output error message and die.
@@ -93,14 +98,19 @@ fi
 
 # Reload the Environment
 msg_c -g "Reloading the Environment"
-cd "${HOME}" && source "${HOME}/.bashrc"
+if [ "${computer_type}" == "Mac" ]; then
+    cd "${HOME}" && source "${HOME}/.bash_profile"
+else
+    cd "${HOME}" && source "${HOME}/.bashrc"    
+fi
 
 # Testing! Check to make sure the symlinks are not there then run the script with -h
-msg_c -g "ls'ing the ${ULBIN} directory."
-ls -hlapv --color "${ULBIN}"
-# mountsshfs -h
-# unmountsshfs -h
-
+msg_c -g "ls'ing the ${ULBIN} directory"
+if [ "${computer_type}" == "Mac" ]; then
+    ls -hlapv "${ULBIN}"
+else
+    ls -hlapv --color "${ULBIN}"    
+fi
 
 ## Finish Script (clean up & exit)
 

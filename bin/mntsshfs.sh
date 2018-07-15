@@ -76,10 +76,10 @@ determine_computer_type() {
     local unameOut="$(uname -s)"
 
     case "${unameOut}" in
-        Linux*)     machine="Linux"  ;;
-        Darwin*)    machine="Mac"    ;;
-        CYGWIN*)    machine="Cygwin";;
-        *)          machine="UNKNOWN:${unameOut}" ;;
+        Linux*)     machine="Linux"   ;;
+        Darwin*)    machine="Mac"     ;;
+        CYGWIN*)    machine="Cygwin"  ;;
+        *)          machine="UNKNOWN" ;;
     esac
 
     echo ${machine}
@@ -120,6 +120,19 @@ fi
 
 ## Start Script
 
+# Lets see if we can what computer this bash script is running on.
+computer_type=$(determine_computer_type)
+
+if [ $verbose -gt 1 ]; then
+    msg_c -nb "You computer type is: " 
+    msg_c -a  "${computer_type}"
+fi
+
+if [ "${computer_type}" == "UNKNOWN" ]; then
+    msg_c -r "I couldn't figure out your computer type... Exiting... ☹️" 1>&2
+    exit 1
+fi 
+
 for valid_server in "${valid_servers[@]}"; do 
     if [ "$valid_server" == "$1" ]; then
         remotedirpath=$(awk "/Host ${valid_server}/,/^$/" ~/.ssh/config | sed -n "s/.*#remotedirpath //p")
@@ -132,18 +145,12 @@ done
 
 if [ $verbose -gt 2 ]; then
     echo ""
-    msg_c -nb "parent directory path: "
-    msg_c -a  "${parentdirpath}"
-    msg_c -nb "remote directory path: "
-    msg_c -a  "${remotedirpath}"
-    msg_c -nb " local directory path: "
-    msg_c -a  "${localdirpath}"
-    msg_c -nb "      server username: "
-    msg_c -a  "${server_user}"
-    msg_c -nb "           server uri: "
-    msg_c -a  "${serveruri}"
-    msg_c -nb "   identity file path: "
-    msg_c -a  "${identityfilepath}"
+    msg_c -nb "parent directory path: "; msg_c -a "${parentdirpath}";
+    msg_c -nb "remote directory path: "; msg_c -a "${remotedirpath}";
+    msg_c -nb " local directory path: "; msg_c -a "${localdirpath}";
+    msg_c -nb "      server username: "; msg_c -a "${server_user}";
+    msg_c -nb "           server uri: "; msg_c -a "${serveruri}";
+    msg_c -nb "   identity file path: "; msg_c -a "${identityfilepath}";
     echo ""
 fi
 
@@ -157,14 +164,6 @@ fi
 
 if [ ! -d $localdirpath ]; then 
     mkdir $localdirpath
-fi
-
-# Lets see if we can what computer this bash script is running on.
-computer_type=$(determine_computer_type)
-
-if [ $verbose -gt 1 ]; then
-    msg_c -nb "You computer type is: " 
-    msg_c -a  "${computer_type}"
 fi
 
 ## Make the sshfs command
@@ -183,8 +182,6 @@ if [ ! -z $identityfilepath ]; then
     sshfs_command="${sshfs_command},IdentityFile=${identityfilepath}"
 fi
 
-previous_num_of_mounted_dirs=$(mount | grep $parentdirpath | wc -l)
-
 # Display the command to be used for debugging and exit
 if [ $testing_mode == 1 ]; then
     echo ""
@@ -194,6 +191,8 @@ if [ $testing_mode == 1 ]; then
     exit 0
 fi
 
+previous_num_of_mounted_dirs=$(mount | grep $parentdirpath | wc -l)
+
 # Mount the sshfs file system
 eval ${sshfs_command}
 
@@ -202,10 +201,8 @@ current_num_of_mounted_dirs=$(mount | grep $parentdirpath | wc -l)
 ## Finish Script (clean up & exit)
 
 if [ $verbose -gt 2 ]; then
-    msg_c -nb "previous_num_of_mounted_dirs = "
-    msg_c -a  "${previous_num_of_mounted_dirs}"
-    msg_c -nb "current_num_of_mounted_dirs  = "
-    msg_c -a  "${current_num_of_mounted_dirs}"
+    msg_c -nb "previous_num_of_mounted_dirs = "; msg_c -a "${previous_num_of_mounted_dirs}";
+    msg_c -nb "current_num_of_mounted_dirs  = "; msg_c -a "${current_num_of_mounted_dirs}";
 fi
 
 if [ $current_num_of_mounted_dirs -gt $previous_num_of_mounted_dirs ]; then

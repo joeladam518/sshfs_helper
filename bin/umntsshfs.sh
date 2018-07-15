@@ -69,10 +69,10 @@ determine_computer_type() {
     local unameOut="$(uname -s)"
 
     case "${unameOut}" in
-        Linux*)     machine="Linux"  ;;
-        Darwin*)    machine="Mac"    ;;
-        CYGWIN*)    machine="Cygwin";;
-        *)          machine="UNKNOWN:${unameOut}" ;;
+        Linux*)     machine="Linux"   ;;
+        Darwin*)    machine="Mac"     ;;
+        CYGWIN*)    machine="Cygwin"  ;;
+        *)          machine="UNKNOWN" ;;
     esac
 
     echo ${machine}
@@ -111,6 +111,21 @@ if [ -z $server_to_unmount ]; then
     exit 1
 fi
 
+## Start Script
+
+# Lets see if we can what computer this bash script is running on.
+computer_type=$(determine_computer_type)
+
+if [ $verbose -gt 1 ]; then
+    msg_c -nb "You computer type is: "
+    msg_c -a  "${computer_type}"
+fi
+
+if [ "${computer_type}" == "UNKNOWN" ]; then
+    msg_c -r "I couldn't figure out your computer type... Exiting... ☹️" 1>&2
+    exit 1
+fi 
+
 for valid_server in "${valid_servers[@]}"; do 
     if [ "$valid_server" == "$1" ]; then 
         localdirpath="${parentdirpath}/${server_to_unmount}"
@@ -127,16 +142,6 @@ if [ -z $localdirpath ]; then
     exit 1
 fi
 
-# Lets see if we can what computer this bash script is running on.
-computer_type=$(determine_computer_type)
-
-if [ $verbose -gt 1 ]; then
-    msg_c -nb "You computer type is: "
-    msg_c -a  "${computer_type}"
-fi
-
-previous_num_of_mounted_dirs=$(mount | grep $parentdirpath | wc -l)
-
 # Display the command to be used for debugging and exit
 if [ $testing_mode == 1 ]; then
     echo ""
@@ -150,6 +155,8 @@ if [ $testing_mode == 1 ]; then
     exit 0
 fi
 
+previous_num_of_mounted_dirs=$(mount | grep $parentdirpath | wc -l)
+
 # Unmount the sshfs file system
 if [ "$computer_type" == "Mac" ]; then
     umount $localdirpath # The general way (makes me nervous)
@@ -162,10 +169,8 @@ current_num_of_mounted_dirs=$(mount | grep $parentdirpath | wc -l)
 ## Finish Script (clean up & exit)
 
 if [ $verbose -gt 2 ]; then
-    msg_c -nb "previous_num_of_mounted_dirs = "
-    msg_c -a  "${previous_num_of_mounted_dirs}"
-    msg_c -nb "current_num_of_mounted_dirs  = "
-    msg_c -a  "${current_num_of_mounted_dirs}"
+    msg_c -nb "previous_num_of_mounted_dirs = "; msg_c -a  "${previous_num_of_mounted_dirs}";
+    msg_c -nb "current_num_of_mounted_dirs  = "; msg_c -a  "${current_num_of_mounted_dirs}";
 fi
 
 if [ $current_num_of_mounted_dirs -lt $previous_num_of_mounted_dirs ]; then
