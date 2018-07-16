@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+# Add this comment
+
 ## First, check if the user is running this script as root. 
 if [ $(id -u) -eq 0 ]; then 
     echo "You should never run \"${0##*/}\" as root. Please try again." 1>&2
